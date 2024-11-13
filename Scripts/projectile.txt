@@ -1,0 +1,63 @@
+class Projectile(pygame.sprite.Sprite):
+    def __init__(self, x, y, direction, homing):
+        super().__init__()
+        self.spriteSheet = img.arrowSheet
+        self.currentSprite = 0
+        self.image = SpriteSheetManager(self.spriteSheet).getCurrentImg(16, 16, self.currentSprite, 3)
+
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = x, y
+        self.direction = direction
+        self.isHoming = homing
+        self.spawned = False
+        self.steppedOnPlate = False
+
+    
+    def moveTowards(self, speed):
+        if self.direction == "right":
+            action = 0
+            self.rect.x += speed
+        elif self.direction == "left":
+            action = 1
+            self.rect.x -= speed
+        elif self.direction == "up":
+            action = 2
+            self.rect.y -= speed
+        elif self.direction == "down":
+            action = 3
+            self.rect.y += speed
+
+        for i in co.staticObj:
+            if self.rect.colliderect(i.rect):
+                self.kill()
+                break
+        
+        self.image = SpriteSheetManager(self.spriteSheet).getCurrentImg(16, 16, int(self.currentSprite), action)
+
+    def spawn(self, player, plate):
+        if plate.rect.colliderect(player.feetRect):
+            if not self.steppedOnPlate:
+                self.spawned = True
+                self.steppedOnPlate = True
+        else:
+            self.steppedOnPlate = False
+
+        return self.spawned
+
+arrow = Projectile(153, 20, "down", False)
+arrowList = pygame.sprite.Group()
+arrowList.add(arrow)
+
+
+##############################################################################
+
+spawnArrow = False
+steppedOnPlate = False
+arrow = None
+
+if ss.arrow.spawn(ss.player, ss.plate):
+    ss.arrow.spawned = False 
+ss.arrow.moveTowards(4)
+
+for arrow in ss.arrowList:
+    SCREEN.blit(arrow.image, (arrow.rect.x - ss.player.camX, arrow.rect.y - ss.player.camY))
